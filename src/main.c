@@ -4,81 +4,66 @@
 #include <time.h>
 
 // preset primes
-#define P 13
-#define Q 11
-#define MAX_K 100000
+#define P 19
+#define Q 13
+#define N P*Q
+#define D 31
+#define E 3
+#define BIT_SIZE 32
 
+/*
+Returns number of bits in integer value
+*/
+int count_num_bits(int value) {
+    int count = 0;
 
-bool is_valid_K(uint32_t k, uint32_t R) {
-    // assert k > R
-    if ( k <= R )
-        return false;
-    // assert k mod R = 1
-    if ( (k % R) != 1 )
-        return false;
-    
-    // ensure k, R are relatively prime and k isn't prime
-    bool is_prime_k = true;
-    for ( int i = 2; i < k; i++ ) {
-        if ( (k%i == 0) && (R%i == 0) )
-            return false;
-        if ( k%i == 0 )
-            is_prime_k = false;
+    while(value > 0) {
+        count ++;
+        value >>= 1;
     }
-
-    return !is_prime_k;
+    return count;
 }
 
-void compute_keys(uint32_t *D, uint32_t *E, uint32_t N, uint32_t R) {
-    // generate options for K = 1 mod R
-    uint32_t max_options = (MAX_K / R) + 1;
-    uint32_t *options = (uint32_t *) (malloc( max_options * sizeof(uint32_t) ));
-    uint32_t k_count = 0;
-    for ( int option = R + 1; option < MAX_K; option += R ) {
-        if ( is_valid_K(option, R) ) {
-            options[k_count] = option;
-            k_count++;
-        }
-    }
+/*
+Montgomery Modular Multiplication algorithm
+Returns result of X * Y given N largest key size (modulus)
+*/
+uint32_t MMM(uint32_t X, uint32_t Y) {
+	uint32_t T = 0;
+	for ( uint32_t i = 0; i < count_num_bits(N); i++ ) {
+		bool nu = (T & 1) ^ ((X & (1 << i)) && (Y & 1));
+		T = (T + ((X & (1 << i)) >> i)*Y + nu*N) >> 1;
+	}
+	if (T >= N) {
+		T = T - N;
+	}
+	return T;
+}
 
-    // randomly select K value from available options
-    uint32_t rand_index = rand() % k_count;
-    uint32_t K = options[rand_index];
-    free(options);
-    printf("K VALUE: %i\n", K);
-
-    // select factors for D, E
-    uint32_t *factors = (uint32_t *) (malloc(  K * sizeof(uint32_t) ));
-    uint32_t factor_count = 0;
-    for ( int factor = 2; factor < K; factor++ ) {
-        if (factor*factor == K) {
-            factors[factor_count] = factor;
-            factor_count++;
-            factors[factor_count] = factor;
-            factor_count++;
-        }
-        else if (K%factor == 0) {
-            factors[factor_count] = factor;
-            factor_count++;
-        }
-    }
-    uint32_t index_d = rand() % factor_count;
-    *D = factors[index_d];
-    uint32_t index_e = rand() % factor_count;
-    if (index_e == index_d)
-        index_e = (index_e + 1) % factor_count;
-    *E = factors[index_e];
-    free(factors);
+/*
+Right-to-Left Multiply and Square algorithm using MMM
+Returns RSA-encrypted message
+*/
+uint32_t RTL_MME(uint32_t msg) {
+	uint32_t t = msg;
+	uint32_t r = 1;
+	for ( int i = 0; i < BIT_SIZE; i++ ) {
+		if (E & (1 << i))
+			r = (r*t) % N;
+		t = (t * t) % N;
+	}
+    return r;
 }
 
 int main() {
     srand(time(NULL));
-    uint32_t N = P*Q;
-    uint32_t R = (P-1)*(Q-1);
 
-    uint32_t D, E;
-    compute_keys(&D, &E, N, R);
-    printf("Public Key (D): %i\n", D);
-    printf("Private Key (E): %i\n", E);
+	uint32_t msg = 55;
+
+    // Test MMM
+	printf("MMM result: %i\n", MMM(179, 145));
+    // Test exponentiation
+	printf("Encrypted Message: %i\n", RTL_MME(msg));
+
     return 0;
 }
