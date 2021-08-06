@@ -56,9 +56,15 @@ Returns RSA-encrypted message
 uint32_t RTL_MME(uint32_t msg, uint32_t exp) {
 	uint32_t t = msg;
 	uint32_t r = 1;
+	uint32_t r_fake =  1;
+
 	for ( int i = 0; i < BIT_SIZE; i++ ) {
-		if (exp & (1 << i))
+		if (exp & (1 << i)) {
 			r = MMM(r, t) % N;
+		} else {
+			r_fake = MMM(r, t) % N;
+		}
+		
 		t = MMM(t, t) % N;
 	}
     return r;
