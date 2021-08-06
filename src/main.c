@@ -37,7 +37,7 @@ uint32_t MMM(uint32_t X, uint32_t Y) {
 	if (T >= N) {
 		T = T - N;
 	}
-	return T;
+	return T * (1 << count_num_bits(N)) % N;
 }
 
 /*
@@ -62,6 +62,7 @@ int main() {
 
     // Test MMM
 	printf("MMM result: %i\n", MMM(179, 145));
+	printf("MMM result: %i\n", MMM(17, 22));
     // Test exponentiation
 	printf("Encrypted Message: %i\n", RTL_MME(msg));
 
