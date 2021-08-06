@@ -7,7 +7,7 @@
 // preset primes
 #define P 19
 #define Q 13
-#define N P*Q
+#define N (P*Q)
 #define D 31
 #define E 3
 #define BIT_SIZE 32
@@ -46,19 +46,18 @@ uint32_t MMM(uint32_t X, uint32_t Y) {
 	    T_fake = T - N;
 	}
 	
-	printf("T: %i, (T << m): %i, N: %i, (T << m) / N: %i\n", T, (T << m), N, 28672 % (N));
-	return (T << m) % (N);
+	return (T << m) % N;
 }
 
 /*
 Right-to-Left Multiply and Square algorithm using MMM
 Returns RSA-encrypted message
 */
-uint32_t RTL_MME(uint32_t msg) {
+uint32_t RTL_MME(uint32_t msg, uint32_t exp) {
 	uint32_t t = msg;
 	uint32_t r = 1;
 	for ( int i = 0; i < BIT_SIZE; i++ ) {
-		if (E & (1 << i))
+		if (exp & (1 << i))
 			r = (r*t) % N;
 		t = (t * t) % N;
 	}
@@ -68,13 +67,16 @@ uint32_t RTL_MME(uint32_t msg) {
 int main() {
     srand(time(NULL));
 
-	uint32_t msg = 55;
+	uint32_t msg = 13;
 
     // Test MMM
 	printf("MMM result: %i\n", MMM(179, 145));
 	printf("MMM result: %i\n", MMM(17, 22));
+
     // Test exponentiation
-	printf("Encrypted Message: %i\n", RTL_MME(msg));
+	uint32_t encr_msg = RTL_MME(msg, E);
+	printf("Encrypted Message: %i\n", encr_msg);
+	printf("Decrypted Message: %i\n", RTL_MME(encr_msg, D));
 
     return 0;
 }
