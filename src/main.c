@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <time.h>
+#include <stdint.h>
 
 // preset primes
 #define P 19
@@ -15,7 +16,7 @@
 /*
 Returns number of bits in integer value
 */
-int count_num_bits(int value) {
+int count_num_bits(uint32_t value) {
     int count = 0;
 
     while(value > 0) {
@@ -45,7 +46,8 @@ uint32_t MMM(uint32_t X, uint32_t Y) {
 	    T_fake = T - N;
 	}
 	
-	return (T << m) % N;
+	printf("T: %i, (T << m): %i, N: %i, (T << m) / N: %i\n", T, (T << m), N, 28672 % (N));
+	return (T << m) % (N);
 }
 
 /*
