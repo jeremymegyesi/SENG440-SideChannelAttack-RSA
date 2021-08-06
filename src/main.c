@@ -5,11 +5,11 @@
 #include <stdint.h>
 
 // preset primes
-#define P 19
-#define Q 13
-#define N (P*Q)
-#define D 31
-#define E 3
+#define P 57557
+#define Q 52361
+#define N 3013742077
+#define D 65537
+#define E 1270666913
 #define BIT_SIZE 32
 #define MAX_BIT_SIZE 64
 
@@ -31,9 +31,9 @@ Montgomery Modular Multiplication algorithm
 Returns result of X * Y given N largest key size (modulus)
 */
 uint32_t MMM(uint32_t X, uint32_t Y) { 
-	uint32_t T = 0;
-	uint32_t T_fake = 0;
-	uint64_t m = count_num_bits(N);
+	uint64_t T = 0;
+	uint64_t T_fake = 0;
+	uint8_t m = count_num_bits(N);
 	
 	for ( uint32_t i = 0; i < m; i++ ) {
 		bool nu = (T & 1) ^ ((X & (1 << i)) && (Y & 1));
@@ -58,8 +58,8 @@ uint32_t RTL_MME(uint32_t msg, uint32_t exp) {
 	uint32_t r = 1;
 	for ( int i = 0; i < BIT_SIZE; i++ ) {
 		if (exp & (1 << i))
-			r = (r*t) % N;
-		t = (t * t) % N;
+			r = MMM(r, t) % N;
+		t = MMM(t, t) % N;
 	}
     return r;
 }
@@ -67,7 +67,8 @@ uint32_t RTL_MME(uint32_t msg, uint32_t exp) {
 int main() {
     srand(time(NULL));
 
-	uint32_t msg = 13;
+	// msg value must be less than N
+	uint32_t msg = 3000000001;
 
     // Test MMM
 	printf("MMM result: %i\n", MMM(179, 145));
@@ -75,8 +76,9 @@ int main() {
 
     // Test exponentiation
 	uint32_t encr_msg = RTL_MME(msg, E);
-	printf("Encrypted Message: %i\n", encr_msg);
-	printf("Decrypted Message: %i\n", RTL_MME(encr_msg, D));
+	uint32_t decr_msg = RTL_MME(encr_msg, D);
+	printf("Encrypted Message: %lu\n", encr_msg);
+	printf("Decrypted Message: %lu\n", decr_msg);
 
     return 0;
 }
