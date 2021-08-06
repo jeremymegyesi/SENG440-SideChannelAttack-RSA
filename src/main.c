@@ -10,6 +10,7 @@
 #define D 31
 #define E 3
 #define BIT_SIZE 32
+#define MAX_BIT_SIZE 64
 
 /*
 Returns number of bits in integer value
@@ -30,14 +31,23 @@ Returns result of X * Y given N largest key size (modulus)
 */
 uint32_t MMM(uint32_t X, uint32_t Y) {
 	uint32_t T = 0;
-	for ( uint32_t i = 0; i < count_num_bits(N); i++ ) {
+	uint32_t T_fake = 0;
+	uint64_t m = count_num_bits(N);
+	uint64_t R = 1 << m;
+
+	for ( uint32_t i = 0; i < m; i++ ) {
 		bool nu = (T & 1) ^ ((X & (1 << i)) && (Y & 1));
 		T = (T + ((X & (1 << i)) >> i)*Y + nu*N) >> 1;
 	}
 	if (T >= N) {
 		T = T - N;
 	}
-	return T * (1 << count_num_bits(N)) % N;
+	
+	uint64_t remaining_bits = MAX_BIT_SIZE - R;
+	T = T * R % N;
+	T_fake = T_fake * remaining_bits % N; // fake operation for robustness
+	
+	return T;
 }
 
 /*
