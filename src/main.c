@@ -67,18 +67,24 @@ uint32_t RTL_MME(uint32_t msg, uint32_t exp) {
 int main() {
     srand(time(NULL));
 
-	// msg value must be less than N
-	uint32_t msg = 3000000001;
+	// scan for msg value, must be less than N
+	uint32_t msg;
+	printf("Enter a message to encrypt (0 - %lu):\n", N);
+	scanf("%lu", &msg);
 
     // Test MMM
+	printf("\n---------- TESTING MMM ----------\n");
 	printf("MMM result: %i\n", MMM(179, 145));
 	printf("MMM result: %i\n", MMM(17, 22));
+	printf("---------------------------------\n");
 
     // Test exponentiation
 	uint32_t encr_msg = RTL_MME(msg, E);
 	uint32_t decr_msg = RTL_MME(encr_msg, D);
+	printf("\n------- TESTING ENCRYPTION -------\n");
 	printf("Encrypted Message: %lu\n", encr_msg);
 	printf("Decrypted Message: %lu\n", decr_msg);
+	printf("---------------------------------\n");
 
     return 0;
 }
