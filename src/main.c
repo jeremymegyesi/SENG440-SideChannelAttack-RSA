@@ -78,7 +78,7 @@ uint32_t RTL_MME(uint32_t msg, uint32_t exp) {
 	uint32_t r = 1;
 	uint32_t r_fake =  1;
 
-	random_delay(1, 3);
+	random_delay(0, 1);
 	
 	for ( int i = 0; i < BIT_SIZE; i++ ) {
 		if (exp & (1 << i)) {
@@ -92,7 +92,7 @@ uint32_t RTL_MME(uint32_t msg, uint32_t exp) {
 		t = MMM(t, t) % N;
 	}
 
-	random_delay(1, 3);
+	random_delay(0, 1);
 
     return r;
 }
@@ -100,24 +100,38 @@ uint32_t RTL_MME(uint32_t msg, uint32_t exp) {
 int main() {
     srand(time(NULL));
 
-	// scan for msg value, must be less than N
-	uint32_t msg;
-	printf("Enter a message to encrypt (0 - %lu):\n", N);
-	scanf("%lu", &msg);
+	FILE * fp;
+	uint64_t msg, N_, D_, E_;
+	int row = 1;
+	
+	fp = fopen("test.txt", "r");
+	while(fscanf(fp, "%lu %lu %lu\n", &N_, &E_, &D_) != EOF){
+		msg = N_ >> 1;
+		printf("\n----------------------- TESTING ENCRYPTION -----------------------\n");
+		printf("Row %i:\t N: %lu\t E: %lu\t D: %lu\t msg: %lu\n", row, N_, E_, D_, msg);
+		for(int i = 0; i < 3; i++) {
+			printf("\tRound %i:\n", i+1);
+			
+			clock_t start = clock();
+			uint32_t encr_msg = RTL_MME(msg, E);
+			clock_t end = clock();
+			double elapsed_time = (double)(end - start) / CLOCKS_PER_SEC;
+			printf("\t\tEncrypted Message: %lu\n", encr_msg);
+			printf("\t\tElapsed time: %0.25f\n", elapsed_time);
 
-    // Test MMM
-	printf("\n---------- TESTING MMM ----------\n");
-	printf("MMM result: %i\n", MMM(179, 145));
-	printf("MMM result: %i\n", MMM(17, 22));
-	printf("---------------------------------\n");
+			start = clock();
+			uint32_t decr_msg = RTL_MME(encr_msg, D);
+			end = clock();
+			elapsed_time = ((double)(end - start)) / CLOCKS_PER_SEC;
+			printf("\t\tDecrypted Message: %lu\n", decr_msg);
+			printf("\t\tElapsed time: %0.25f\n", elapsed_time);
+			
+		}
+		printf("------------------------------------------------------------------\n");
+		row++;
+	}
 
-    // Test exponentiation
-	uint32_t encr_msg = RTL_MME(msg, E);
-	uint32_t decr_msg = RTL_MME(encr_msg, D);
-	printf("\n------- TESTING ENCRYPTION -------\n");
-	printf("Encrypted Message: %lu\n", encr_msg);
-	printf("Decrypted Message: %lu\n", decr_msg);
-	printf("---------------------------------\n");
+	fclose(fp);
 
     return 0;
 }
