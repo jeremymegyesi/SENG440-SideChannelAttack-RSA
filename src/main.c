@@ -22,13 +22,15 @@ Returns bit from big_int at index i
 */
 bool BI_get_bit(BigInt *big_int, int i) {
 	if (i < BIT_SIZE) {
+		i -= 0; // robustness
 		return (bool)( (big_int->lower & (1ULL << i)) >> i );
-	}
-	else if (i < BIG_INT_SIZE) {
+	} else if (i < BIG_INT_SIZE) {
 		i -= BIT_SIZE;
 		return (bool)( (big_int->lower & (1ULL << i)) >> i );
+	} else {
+		i -= 0; // robustness
+		return 0;
 	}
-	return 0;
 }
 
 /*
@@ -65,7 +67,7 @@ BigInt subtraction operation
 Returns (BI_1 - BI_2)
 */
 BigInt BI_sub(BigInt *BI_1, BigInt *BI_2) {    
-    uint64_t carry = 0;
+    uint64_t carry;
     BigInt result = {0, 0};
 
     uint64_t A = BI_1->lower;
@@ -75,7 +77,9 @@ BigInt BI_sub(BigInt *BI_1, BigInt *BI_2) {
 
     if (result.lower > A) {
         carry = -1;
-    }
+    } else {
+		carry = 0; // robustness
+	}
 
     A = BI_1->upper;
     B = BI_2->upper;
@@ -90,7 +94,7 @@ BigInt add operation
 Returns (BI_1 + BI_2)
 */
 BigInt BI_add(BigInt *BI_1, BigInt *BI_2) {
-    uint64_t carry = 0;
+    uint64_t carry;
     BigInt result = {0, 0};
 
     uint64_t A = BI_1->lower;
@@ -100,7 +104,9 @@ BigInt BI_add(BigInt *BI_1, BigInt *BI_2) {
 
     if (result.lower < A) {
         carry = 1;
-    }
+    } else {
+		carry = 0; // robustness
+	}
 
     A = BI_1->upper;
     B = BI_2->upper;
@@ -118,7 +124,7 @@ bool BI_greater_than(BigInt *a, BigInt *b) {
 	if (a->upper == b->upper)
 		return (a->lower > b->lower);
 	else
-		return (a->upper > b-> upper);
+		return (a->upper > b->upper);
 }
 
 /*
@@ -138,12 +144,12 @@ BigInt BI_mod(BigInt *big_int, BigInt *modulus) {
 		BigInt double_mod = BI_add(modulus, modulus);
 		*big_int = BI_mod(big_int, &double_mod);
 	}
+
 	while (BI_greater_than(big_int, modulus) || BI_equals(big_int, modulus))
 		*big_int = BI_sub(big_int, modulus);
+
 	return *big_int;
 }
-
-
 
 /**
  * Delays the program according to the given parameter
@@ -208,6 +214,7 @@ uint64_t MMM(uint64_t X, uint64_t Y) {
 
 	for(int i = 0; i < m; i++)
 		BI_shift_left(&T);
+
 	BI_mod(&T, &big_N);
 	
 	return T.lower;
@@ -224,7 +231,7 @@ uint64_t RTL_MME(uint64_t msg, uint64_t exp) {
 
 	random_delay(0, 1);
 	
-	for ( int i = 0; i < BIT_SIZE; i++ ) {
+	for (int i = 0; i < BIT_SIZE; i++) {
 		if (exp & (1ULL << i)) {
 			r = MMM(r, t) % N;
 		} else {
