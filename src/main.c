@@ -145,6 +145,26 @@ BigInt BI_mod(BigInt *big_int, BigInt *modulus) {
 
 
 
+/**
+ * Delays the program according to the given parameter
+ * (Considered "constant" within its own logic)
+ */
+void constant_delay(int num_secs){
+    long pause = num_secs*CLOCKS_PER_SEC;
+    clock_t past = clock();
+
+    while((clock()-past) < pause);
+}
+
+/**
+ * Generates a random number within the given range then calls constant_delay()
+ * (Considered "random" because of the randomly-chosen number)
+ */
+void random_delay(int lower_limit, int upper_limit) {
+	int num_secs = rand() % (upper_limit - lower_limit + 1) + lower_limit;	
+	constant_delay(num_secs);
+}
+
 /*
 Returns number of bits in integer value
 */
@@ -202,15 +222,22 @@ uint64_t RTL_MME(uint64_t msg, uint64_t exp) {
 	uint64_t r = 1;
 	uint64_t r_fake =  1;
 
+	random_delay(1, 3);
+	
 	for ( int i = 0; i < BIT_SIZE; i++ ) {
 		if (exp & (1ULL << i)) {
 			r = MMM(r, t) % N;
 		} else {
 			r_fake = MMM(r, t) % N;
 		}
+
+		random_delay(0, 1);
 		
 		t = MMM(t, t) % N;
 	}
+
+	random_delay(1, 3);
+
     return r;
 }
 
