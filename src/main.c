@@ -12,9 +12,9 @@ typedef struct BigInt {
 	uint64_t upper, lower;
 } BigInt;
 
-const uint64_t N = 0x00c4f8c1b289b032d7;
-const uint64_t D = 0x0f78eade13e95741; // private key
-const uint64_t E = 65537; // public key
+uint64_t N;
+uint64_t D; // private key
+uint64_t E = 65537; // public key
 
 /*
 Get bit from BigInt
@@ -222,7 +222,7 @@ uint64_t RTL_MME(uint64_t msg, uint64_t exp) {
 	uint64_t r = 1;
 	uint64_t r_fake =  1;
 
-	random_delay(1, 3);
+	random_delay(0, 1);
 	
 	for ( int i = 0; i < BIT_SIZE; i++ ) {
 		if (exp & (1ULL << i)) {
@@ -236,7 +236,7 @@ uint64_t RTL_MME(uint64_t msg, uint64_t exp) {
 		t = MMM(t, t) % N;
 	}
 
-	random_delay(1, 3);
+	random_delay(0, 1);
 
     return r;
 }
@@ -244,36 +244,37 @@ uint64_t RTL_MME(uint64_t msg, uint64_t exp) {
 int main() {
     srand(time(NULL));
 
-	// scan for msg value, must be less than N
-	uint64_t msg;
-	printf("Enter a message to encrypt (0 - %llu):\n", N);
-	scanf("%llu", &msg);
-
-	/*
-    // Test MMM
-	printf("\n---------- TESTING MMM ----------\n");
-	printf("MMM result: %llu\n", MMM(179, 145));
-	printf("MMM result: %llu\n", MMM(17, 22));
-	printf("---------------------------------\n");
-	*/
+	// 0x00bd6e6540601a366d 65537 0x0ecb1641043dab89
+	// 0x00bcf5701d1ef5203f 65537 0x7af79a6a2ac5f5b9
+	// 0x00cd23e220bbdecc0d 65537 0x5646b034493f6ba1
+	// 0x00e0bb6374abbae903 65537 0x49d163a63697ab01
+	// 0x00b7c8c8c94b84a82b 65537 0x7edb7c23b226e3c9
+	N = 0x00bd6e6540601a366d;
+	D = 0x0ecb1641043dab89; // private key 
+	uint64_t msg = N >> 1;
 
 	clock_t encr_start, encr_stop, decr_start, decr_stop;
 
-	// encrypt msg
-	encr_start = clock();
-	uint64_t encr_msg = RTL_MME(msg, E);
-	encr_stop = clock();
+	printf("\n----------------------- TESTING ENCRYPTION -----------------------\n");
+	printf("N: %lu\t E: %lu\t D: %lu\t msg: %lu\n", N, E, D, msg);
+	for(int i = 0; i < 3; i++) {
+		printf("\tRound %i:\n", i+1);
+		
+		encr_start = clock();
+		uint64_t encr_msg = RTL_MME(msg, E);
+		encr_stop = clock();
+		printf("\t\tEncrypted Message: %llu\n", encr_msg);
+		printf("\t\tElapsed time: %i ms\n", (encr_stop - encr_start)/(CLOCKS_PER_SEC / 1000));
 
-	// decrypt msg
-	decr_start = clock();
-	uint64_t decr_msg = RTL_MME(encr_msg, D);
-	decr_stop = clock();
-
-	// print results
-	printf("\n------- TESTING ENCRYPTION -------\n");
-	printf("Encrypted Message: %llu (%i ms)\n", encr_msg, (encr_stop - encr_start)/(CLOCKS_PER_SEC / 1000));
-	printf("Decrypted Message: %llu (%i ms)\n", decr_msg, (decr_stop - decr_start)/(CLOCKS_PER_SEC / 1000));
-	printf("---------------------------------\n");
+		
+		decr_start = clock();
+		uint64_t decr_msg = RTL_MME(encr_msg, D);
+		decr_stop = clock();
+		printf("\t\tDecrypted Message: %llu\n", decr_msg);
+		printf("\t\tElapsed time: %i ms\n", (decr_stop - decr_start)/(CLOCKS_PER_SEC / 1000));
+		
+	}
+	printf("------------------------------------------------------------------\n");
 
     return 0;
 }
