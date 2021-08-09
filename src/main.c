@@ -140,15 +140,56 @@ Modulus operation for BigInt type
 Returns (big_int % modulus) as a BigInt
 */
 BigInt BI_mod(BigInt *big_int, BigInt *modulus) {
-	if (BI_greater_than(big_int, modulus)) {
-		BigInt double_mod = BI_add(modulus, modulus);
-		*big_int = BI_mod(big_int, &double_mod);
+	BigInt tmp_mod = *modulus;
+	BigInt double_tmp = BI_add(modulus, modulus);
+
+	// dummy variables
+	BigInt a = *big_int;
+	BigInt *big_int_fake = &a;
+	BigInt tmp_mod_fake = *modulus;
+	BigInt double_tmp_fake = double_tmp;
+
+	for (int i = 0; i < BIT_SIZE; i++) {
+		if (BI_greater_than(big_int, &double_tmp)) {
+			BI_shift_left(&tmp_mod);
+			BI_shift_left(&double_tmp);
+		} else {
+			BI_shift_left(&tmp_mod_fake);
+			BI_shift_left(&double_tmp_fake);
+		}
 	}
 
-	while (BI_greater_than(big_int, modulus) || BI_equals(big_int, modulus))
-		*big_int = BI_sub(big_int, modulus);
+	// while (big_int >= mod)
+	for (int i = 0; i < BIT_SIZE; i++) {
+		// precompute conditionals for robustness
+		bool GT_bigInt_mod, EQ_bigInt_mod, GT_bigInt_tmp, EQ_bigInt_tmp, GT_tmp_mod, EQ_tmp_mod;
+		GT_bigInt_mod = BI_greater_than(big_int, modulus);
+		EQ_bigInt_mod = BI_equals(big_int, modulus);
+		GT_bigInt_tmp = BI_greater_than(big_int, &tmp_mod);
+		EQ_bigInt_tmp = BI_equals(big_int, &tmp_mod);
+		GT_tmp_mod = BI_greater_than(&tmp_mod, modulus);
+		EQ_tmp_mod = BI_equals(&tmp_mod, modulus);
 
-	return *big_int;
+		if (GT_bigInt_mod || EQ_bigInt_mod) {
+			if (GT_bigInt_tmp || EQ_bigInt_tmp)
+				*big_int = BI_sub(big_int, &tmp_mod);
+			else
+				*big_int_fake = BI_sub(big_int_fake, &tmp_mod_fake);
+			if (GT_tmp_mod || EQ_tmp_mod)
+				BI_shift_right(&tmp_mod);
+			else
+				BI_shift_right(&tmp_mod_fake);
+		} else {
+			if (GT_bigInt_mod || EQ_bigInt_mod)
+				*big_int_fake = BI_sub(big_int_fake, &tmp_mod_fake);
+			else
+				*big_int_fake = BI_sub(big_int_fake, &tmp_mod_fake);
+			if (GT_tmp_mod || EQ_tmp_mod)
+				BI_shift_right(&tmp_mod_fake);
+			else
+				BI_shift_right(&tmp_mod_fake);
+		}
+	}
 }
 
 /**
