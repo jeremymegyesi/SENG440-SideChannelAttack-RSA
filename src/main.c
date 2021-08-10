@@ -195,9 +195,10 @@ BigInt BI_mod(BigInt *big_int, BigInt *modulus) {
 /**
  * Delays the program according to the given parameter
  * (Considered "constant" within its own logic)
+ * Source: https://c-for-dummies.com/blog/?p=69
  */
-void constant_delay(int num_secs){
-    long pause = num_secs*CLOCKS_PER_SEC;
+void constant_delay(int num_ms){
+    long pause = num_ms*(CLOCKS_PER_SEC/1000);
     clock_t past = clock();
 
     while((clock()-past) < pause);
@@ -208,8 +209,8 @@ void constant_delay(int num_secs){
  * (Considered "random" because of the randomly-chosen number)
  */
 void random_delay(int lower_limit, int upper_limit) {
-	int num_secs = rand() % (upper_limit - lower_limit + 1) + lower_limit;	
-	constant_delay(num_secs);
+	int num_ms = rand() % (upper_limit - lower_limit + 1) + lower_limit;	
+	constant_delay(num_ms);
 }
 
 /*
@@ -270,7 +271,7 @@ uint64_t RTL_MME(uint64_t msg, uint64_t exp) {
 	uint64_t r = 1;
 	uint64_t r_fake =  1;
 
-	random_delay(0, 1);
+	random_delay(0, 1000);
 	
 	for (int i = 0; i < BIT_SIZE; i++) {
 		if (exp & (1ULL << i)) {
@@ -279,12 +280,12 @@ uint64_t RTL_MME(uint64_t msg, uint64_t exp) {
 			r_fake = MMM(r, t) % N;
 		}
 
-		random_delay(0, 1);
+		random_delay(0, 250);
 		
 		t = MMM(t, t) % N;
 	}
 
-	random_delay(0, 1);
+	random_delay(0, 1000);
 
     return r;
 }
@@ -307,29 +308,17 @@ int main() {
     printf("N: %llu\t E: %llu\t D: %llu\t msg: %llu\n", N, E, D, msg);
     
     encr_start = clock();
-    uint64_t encr_msg = RTL_MME(msg, D);
-    encr_stop = clock();
-    printf("\t\tEncrypted Message: %llu\n", encr_msg);
-    printf("\t\tElapsed time: %i ms\n", (encr_stop - encr_start)/(CLOCKS_PER_SEC / 1000));
-    /*
-    for(int i = 0; i < 3; i++) {
-        printf("\tRound %i:\n", i+1);
-        
-        encr_start = clock();
-        uint64_t encr_msg = RTL_MME(msg, E);
-        encr_stop = clock();
-        printf("\t\tEncrypted Message: %llu\n", encr_msg);
-        printf("\t\tElapsed time: %i ms\n", (encr_stop - encr_start)/(CLOCKS_PER_SEC / 1000));
+	uint64_t encr_msg = RTL_MME(msg, E);
+	encr_stop = clock();
+	printf("\t\tEncrypted Message: %llu\n", encr_msg);
+	printf("\t\tElapsed time: %i ms\n", (encr_stop - encr_start)/(CLOCKS_PER_SEC / 1000));
 
-        
-        decr_start = clock();
-        uint64_t decr_msg = RTL_MME(encr_msg, D);
-        decr_stop = clock();
-        printf("\t\tDecrypted Message: %llu\n", decr_msg);
-        printf("\t\tElapsed time: %i ms\n", (decr_stop - decr_start)/(CLOCKS_PER_SEC / 1000));
-        
-    }
-    */
+	
+	decr_start = clock();
+	uint64_t decr_msg = RTL_MME(encr_msg, D);
+	decr_stop = clock();
+	printf("\t\tDecrypted Message: %llu\n", decr_msg);
+	printf("\t\tElapsed time: %i ms\n", (decr_stop - decr_start)/(CLOCKS_PER_SEC / 1000));
     printf("------------------------------------------------------------------\n");
 
     return 0;
