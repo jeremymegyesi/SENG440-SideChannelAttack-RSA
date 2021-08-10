@@ -16,8 +16,9 @@ The project will involve developing C code on an ARM machine to perform RSA encr
 7. Run executable on Arm machine: `./example.exe`
 
 ## Command to compile executable
-arm-linux-gcc -static -o team19_RSA.exe main.c -std=c99
+`arm-linux-gcc -static -o team19_RSA.exe main.c -std=c99`
+
 (include "-pg" if profiling with gprof)
 
 ## Command to compile Assembly
-arm-linux-gcc -static -S main.c -std=c99
+`arm-linux-gcc -static -S main.c -std=c99`
